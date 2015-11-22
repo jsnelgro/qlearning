@@ -88,8 +88,8 @@
         state = {};
         state.id = row + "-" + col;
         ref2 = buildStateActions(row, col, x, y), state.actions = ref2[0], state.Q = ref2[1];
-        state.reward = Math.floor(Math.random() * 5);
-        if (Math.random() <= 0.5) {
+        state.reward = -10;
+        if (Math.random() <= 0.25) {
           state.reward = -state.reward;
         }
         states[state.id] = state;
@@ -110,7 +110,7 @@
     bestKeys = [];
     for (k in obj) {
       v = obj[k];
-      if (k === bestKey) {
+      if (v === obj[bestKey]) {
         bestKeys.push(k);
       }
     }
@@ -133,13 +133,12 @@
   };
 
   updateQ = function(state, sprime, action) {
-    var _q, actprime, bestQ;
+    var actprime, bestQ, testq;
     bestQ = -Infinity;
-    console.log(sprime);
     for (actprime in sprime.actions) {
-      _q = Q(sprime, actprime) - Q(state, action);
-      if (_q >= bestQ) {
-        bestQ = _q;
+      testq = Q(sprime, actprime) - Q(state, action);
+      if (testq >= bestQ) {
+        bestQ = testq;
       }
     }
     return state.Q[action] += lrate * (R(state, action) + discount * bestQ);
@@ -166,7 +165,7 @@
     prevState = states['0-0'];
     step = function() {
       var a, ref, s, tempS;
-      if (lastStep || prevState.reward > 100) {
+      if (lastStep || prevState.reward >= 70) {
         lastStep = false;
         tempS = prevState;
         prevState = states['0-0'];

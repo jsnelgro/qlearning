@@ -1,4 +1,3 @@
-# Actions = ['left', 'up', 'right', 'down']
 # states = {
 #   0: id: 'start', actions: [1,3], reward: 0,  Q: [0,0,0,0]
 #   1: id: 1, actions: [0,2,4],   reward: -10, Q: [0,0,0,0]
@@ -10,6 +9,8 @@
 #   7: id: 7, actions: [6,8,4],   reward: 20,  Q: [0,0,0,0]
 #   8: id: 'end', actions: [7,5], reward: 9999, Q: [0,0,0,0]
 # }
+
+########################## visualizer code ############################
 
 setColor = (el, reward)->
   if reward < 0
@@ -57,10 +58,11 @@ lightUpCurrState = (prev, state)->
   curr.innerHTML = String("<div>#{Math.floor state.Q[argmax(state.Q)]}</div>")
 
 
+#########################################################################
 
 
 
-################# Q learning stuff ###################################################
+################# Q learning code ###################################################
 
 buildGridworld = (x,y)->
   states = {}
@@ -87,8 +89,8 @@ buildGridworld = (x,y)->
       state = {}
       state.id = "#{row}-#{col}"
       [state.actions, state.Q] = buildStateActions(row, col, x, y)
-      state.reward = Math.floor(Math.random() * 5)
-      if Math.random() <= 0.5 then state.reward = -(state.reward)
+      state.reward = -10
+      if Math.random() <= 0.25 then state.reward = -(state.reward)
       states[state.id] = state
   return states
 
@@ -99,7 +101,7 @@ argmax = (obj)->
       bestKey = k
   bestKeys = []
   for k, v of obj
-    if k == bestKey
+    if v == obj[bestKey]
       bestKeys.push k
   return randChoice(bestKeys)
 
@@ -119,11 +121,12 @@ Q = (state, action)->
 updateQ = (state, sprime, action)->
   bestQ = -Infinity
   for actprime of sprime.actions
-    _q = Q(sprime, actprime) - Q(state, action)
-    if _q >= bestQ then bestQ = _q
+    testq = Q(sprime, actprime) - Q(state, action)
+    if testq >= bestQ then bestQ = testq
   state.Q[action] += lrate*(R(state, action) + discount*(bestQ))
 
 pickState = (state)->
+  # TODO: this rand choice needs to be based on Q values or on a decreasing learning rate
   if Math.random() <= 0.95
     aB = argmax(state.Q)
     bestId = state.actions[aB]
@@ -142,7 +145,7 @@ window.runVisualization = ->
   lastStep = false
   prevState = states['0-0']
   step = ->
-    if lastStep or prevState.reward > 100
+    if lastStep or prevState.reward >= 70
       lastStep = false
       tempS = prevState
       prevState = states['0-0']
