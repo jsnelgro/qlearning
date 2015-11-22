@@ -11,13 +11,13 @@
   };
 
   setupVisualizer = function() {
-    var d, j, k, len, ref, row, s, trow;
+    var d, i, k, len, ref, row, s, trow;
     row = '0';
     trow = document.createElement('div');
     trow.classList.add('trow');
     ref = Object.keys(states);
-    for (j = 0, len = ref.length; j < len; j++) {
-      k = ref[j];
+    for (i = 0, len = ref.length; i < len; i++) {
+      k = ref[i];
       s = states[k];
       d = document.createElement('div');
       d.id = String(s.id);
@@ -59,41 +59,36 @@
   };
 
   buildGridworld = function(x, y) {
-    var _, buildStateActions, col, j, l, ref, ref1, row, state, states;
+    var buildStateActions, col, i, j, ref, ref1, ref2, row, state, states;
     states = {};
     buildStateActions = function(row, col, x, y) {
-      var actions;
-      actions = [];
+      var Q, actions;
+      actions = {};
+      Q = {};
       if (row - 1 >= 0) {
-        actions.push((row - 1) + "-" + col);
+        actions.up = (row - 1) + "-" + col;
+        Q.up = 0;
       }
       if (row + 1 < x) {
-        actions.push((row + 1) + "-" + col);
+        actions.down = (row + 1) + "-" + col;
+        Q.down = 0;
       }
       if (col - 1 >= 0) {
-        actions.push(row + "-" + (col - 1));
+        actions.left = row + "-" + (col - 1);
+        Q.left = 0;
       }
       if (col + 1 < y) {
-        actions.push(row + "-" + (col + 1));
+        actions.right = row + "-" + (col + 1);
+        Q.right = 0;
       }
-      return actions;
+      return [actions, Q];
     };
-    for (row = j = 0, ref = x; 0 <= ref ? j < ref : j > ref; row = 0 <= ref ? ++j : --j) {
-      for (col = l = 0, ref1 = y; 0 <= ref1 ? l < ref1 : l > ref1; col = 0 <= ref1 ? ++l : --l) {
+    for (row = i = 0, ref = x; 0 <= ref ? i < ref : i > ref; row = 0 <= ref ? ++i : --i) {
+      for (col = j = 0, ref1 = y; 0 <= ref1 ? j < ref1 : j > ref1; col = 0 <= ref1 ? ++j : --j) {
         state = {};
         state.id = row + "-" + col;
-        state.actions = buildStateActions(row, col, x, y);
-        state.Q = (function() {
-          var len, m, ref2, results;
-          ref2 = state.actions;
-          results = [];
-          for (m = 0, len = ref2.length; m < len; m++) {
-            _ = ref2[m];
-            results.push(0);
-          }
-          return results;
-        })();
-        state.reward = Math.floor(Math.random() * 50);
+        ref2 = buildStateActions(row, col, x, y), state.actions = ref2[0], state.Q = ref2[1];
+        state.reward = Math.floor(Math.random() * 5);
         if (Math.random() <= 0.5) {
           state.reward = -state.reward;
         }
@@ -103,26 +98,29 @@
     return states;
   };
 
-  argmax = function(arr) {
-    var _, bestInd, bestInds, i, j, l, len, len1, val;
-    bestInd = 0;
-    for (i = j = 0, len = arr.length; j < len; i = ++j) {
-      _ = arr[i];
-      if (arr[i] > bestInd) {
-        bestInd = i;
+  argmax = function(obj) {
+    var bestKey, bestKeys, k, v;
+    bestKey = Object.keys(obj)[0];
+    for (k in obj) {
+      v = obj[k];
+      if (v >= obj[bestKey]) {
+        bestKey = k;
       }
     }
-    bestInds = [];
-    for (i = l = 0, len1 = arr.length; l < len1; i = ++l) {
-      val = arr[i];
-      if (val === arr[bestInd]) {
-        bestInds.push(i);
+    bestKeys = [];
+    for (k in obj) {
+      v = obj[k];
+      if (k === bestKey) {
+        bestKeys.push(k);
       }
     }
-    return randChoice(bestInds);
+    return randChoice(bestKeys);
   };
 
   randChoice = function(arr) {
+    if (!Array.isArray(arr)) {
+      arr = Object.keys(arr);
+    }
     return arr[Math.floor(Math.random() * arr.length)];
   };
 
@@ -135,12 +133,11 @@
   };
 
   updateQ = function(state, sprime, action) {
-    var _, _q, a, bestQ, j, len, ref;
+    var _q, actprime, bestQ;
     bestQ = -Infinity;
-    ref = sprime.actions;
-    for (a = j = 0, len = ref.length; j < len; a = ++j) {
-      _ = ref[a];
-      _q = Q(sprime, a) - Q(state, action);
+    console.log(sprime);
+    for (actprime in sprime.actions) {
+      _q = Q(sprime, actprime) - Q(state, action);
       if (_q >= bestQ) {
         bestQ = _q;
       }
@@ -155,7 +152,7 @@
       bestId = state.actions[aB];
       return [states[bestId], aB];
     } else {
-      aR = Math.floor(Math.random() * state.actions.length);
+      aR = randChoice(state.actions);
       randId = state.actions[aR];
       return [states[randId], aR];
     }
@@ -169,7 +166,7 @@
     prevState = states['0-0'];
     step = function() {
       var a, ref, s, tempS;
-      if (lastStep) {
+      if (lastStep || prevState.reward > 100) {
         lastStep = false;
         tempS = prevState;
         prevState = states['0-0'];
@@ -189,7 +186,7 @@
   };
 
   init = function() {
-    window.states = buildGridworld(5, 5);
+    window.states = buildGridworld(6, 6);
     window.lrate = 0.1;
     window.discount = 0.5;
     return setupVisualizer();

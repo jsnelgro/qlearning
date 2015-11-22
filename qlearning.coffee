@@ -65,41 +65,47 @@ lightUpCurrState = (prev, state)->
 buildGridworld = (x,y)->
   states = {}
   buildStateActions = (row, col, x, y)->
-    actions = []
+    actions = {}
+    Q = {}
     if row - 1 >= 0
-      actions.push "#{row-1}-#{col}" #left
+      actions.up = "#{row-1}-#{col}"
+      Q.up = 0
     if row + 1 < x
-      actions.push "#{row+1}-#{col}" #right
+      actions.down = "#{row+1}-#{col}"
+      Q.down = 0
     if col - 1 >= 0
-      actions.push "#{row}-#{col-1}" #up
+      actions.left = "#{row}-#{col-1}"
+      Q.left = 0
     if col + 1 < y
-      actions.push "#{row}-#{col+1}" #down
-    return actions
+      actions.right = "#{row}-#{col+1}"
+      Q.right = 0
+    return [actions, Q]
 
   # build world
   for row in [0...x]
     for col in [0...y]
       state = {}
       state.id = "#{row}-#{col}"
-      state.actions = buildStateActions(row, col, x, y)
-      state.Q = (0 for _ in state.actions)
-      state.reward = Math.floor(Math.random() * 50)
+      [state.actions, state.Q] = buildStateActions(row, col, x, y)
+      state.reward = Math.floor(Math.random() * 5)
       if Math.random() <= 0.5 then state.reward = -(state.reward)
       states[state.id] = state
   return states
 
-argmax = (arr)->
-  bestInd = 0
-  for _, i in arr
-    if arr[i] > bestInd
-      bestInd = i
-  bestInds = []
-  for val, i in arr
-    if val == arr[bestInd]
-      bestInds.push i
-  return randChoice(bestInds)
+argmax = (obj)->
+  bestKey = Object.keys(obj)[0]
+  for k, v of obj
+    if v >= obj[bestKey]
+      bestKey = k
+  bestKeys = []
+  for k, v of obj
+    if k == bestKey
+      bestKeys.push k
+  return randChoice(bestKeys)
 
 randChoice = (arr)->
+  unless Array.isArray(arr)
+    arr = Object.keys arr
   return arr[Math.floor(Math.random() * arr.length)]
 
 R = (state, action)->
@@ -112,8 +118,8 @@ Q = (state, action)->
 # Q+1 function. state is a state obj, action is the index of the action
 updateQ = (state, sprime, action)->
   bestQ = -Infinity
-  for _,a in sprime.actions
-    _q = Q(sprime, a) - Q(state, action)
+  for actprime of sprime.actions
+    _q = Q(sprime, actprime) - Q(state, action)
     if _q >= bestQ then bestQ = _q
   state.Q[action] += lrate*(R(state, action) + discount*(bestQ))
 
@@ -123,7 +129,7 @@ pickState = (state)->
     bestId = state.actions[aB]
     return [states[bestId], aB]
   else
-    aR = Math.floor(Math.random() * state.actions.length)
+    aR = randChoice(state.actions)
     randId = state.actions[aR]
     return [states[randId], aR]
 
@@ -136,7 +142,7 @@ window.runVisualization = ->
   lastStep = false
   prevState = states['0-0']
   step = ->
-    if lastStep
+    if lastStep or prevState.reward > 100
       lastStep = false
       tempS = prevState
       prevState = states['0-0']
@@ -154,30 +160,9 @@ window.runVisualization = ->
 
 
 init = ->
-  window.states = buildGridworld(5,5)
+  window.states = buildGridworld(6,6)
   window.lrate = 0.1
   window.discount = 0.5
   setupVisualizer()
 
 init()
-
-# runSimulation = ->
-#   for e in [0..5]
-#     t = 10
-#     prevState = states[0]
-#     for [0..t]
-#       # console.log prevState.id
-#       [s, a] = pickState(prevState)
-#       updateQ(prevState, s, a)
-#       prevState = s
-
-# if prevState.id == 'end'
-#   setTimeout ->
-#     lightUpCurrState(prevState, states['0-0'])
-#     prevState = states['0-0']
-#     setTimeout step, 200
-#     e++
-#     console.log "epoch #{e}"
-#   , 200
-# else
-#   setTimeout step, 200
