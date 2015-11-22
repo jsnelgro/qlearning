@@ -88,9 +88,12 @@
         state = {};
         state.id = row + "-" + col;
         ref2 = buildStateActions(row, col, x, y), state.actions = ref2[0], state.Q = ref2[1];
-        state.reward = -10;
+        state.reward = -(Math.random() * 10);
         if (Math.random() <= 0.25) {
-          state.reward = -state.reward;
+          state.reward = state.reward = -100;
+        }
+        if (row === x - 1 && col === y - 1) {
+          state.reward = 70;
         }
         states[state.id] = state;
       }
@@ -175,7 +178,7 @@
       updateQ(prevState, s, a);
       lightUpCurrState(prevState, s);
       prevState = s;
-      return setTimeout(step, 200);
+      return setTimeout(step, 100);
     };
     window.advanceEpoch = function() {
       e++;

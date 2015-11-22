@@ -89,8 +89,10 @@ buildGridworld = (x,y)->
       state = {}
       state.id = "#{row}-#{col}"
       [state.actions, state.Q] = buildStateActions(row, col, x, y)
-      state.reward = -10
-      if Math.random() <= 0.25 then state.reward = -(state.reward)
+      state.reward = -(Math.random()*10)
+      if Math.random() <= 0.25 then state.reward = state.reward = -100
+      if row == x-1 and col == y-1
+        state.reward = 70
       states[state.id] = state
   return states
 
@@ -154,7 +156,7 @@ window.runVisualization = ->
     updateQ(prevState, s, a)
     lightUpCurrState(prevState, s)
     prevState = s
-    setTimeout step, 200
+    setTimeout step, 100
 
   window.advanceEpoch = ->
     e++

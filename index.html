@@ -6,6 +6,7 @@
     <style>
       #content {
         display: table;
+        font-family: 'helvetica neue', sans-serif;
       }
       .cell {
         height: 100px;
@@ -32,7 +33,11 @@
   <body>
     <div id="content"></div>
     <button onclick="window.runVisualization()">start</button>
-    <button onclick="window.advanceEpoch()">Advance Epoch</button>
+    <!-- <button onclick="window.advanceEpoch()">Advance Epoch</button> -->
+    <p>
+      Click a square to increase its reward. Hold shift and click a square to decrease the reward.
+      Click a square until it's dark green to turn it into an "absorbing state" (one that will reset the agent when it reaches it).
+    </p>
     <script src="qlearning.js" charset="utf-8"></script>
   </body>
 </html>
